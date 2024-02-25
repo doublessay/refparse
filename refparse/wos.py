@@ -3,8 +3,10 @@ import re
 
 
 class ParseWos:
-    def __init__(self, ref: str):
+    def __init__(self, ref: str, keep_one_doi: bool = True, keep_eng_result: bool = True):
         self.ref = self.clean(ref)
+        self.keep_one_doi = keep_one_doi
+        self.keep_eng_result = keep_eng_result
 
     @staticmethod
     def clean(ref: str) -> str:
@@ -77,6 +79,9 @@ class ParseWos:
         volume = self.extract_volume(self.ref)
         page = self.extract_page(self.ref)
         doi = self.extract_doi(self.ref)
+        if self.keep_one_doi is True:
+            if doi is not None and "; " in doi:
+                doi = doi.split("; ")[0]
         return {
             "author": author,
             "year": year,
@@ -110,14 +115,24 @@ class ParseWos:
         volume = self.extract_volume(self.ref)
         page = self.extract_page(self.ref)
         doi = self.extract_doi(self.ref)
-        return {
-            "author": author_eng,
-            "year": year,
-            "source": source_eng,
-            "volume": volume,
-            "page": page,
-            "doi": doi,
-        }
+        if self.keep_eng_result is True:
+            return {
+                "author": author_eng,
+                "year": year,
+                "source": source_eng,
+                "volume": volume,
+                "page": page,
+                "doi": doi,
+            }
+        else:
+            return {
+                "author": author_non_eng,
+                "year": year,
+                "source": source_non_eng,
+                "volume": volume,
+                "page": page,
+                "doi": doi,
+            }
 
     def parse_patent(self) -> dict[str, Optional[str]]:
         """Parse a patent reference from Web of Science."""
