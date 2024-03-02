@@ -102,16 +102,15 @@ test_bilingual_data = [
 test_patent_data = [
     (
         "Fan P., 2011, PT, Patent No. 2011163640",
-        {"type": "Patent", "author": "Fan P.", "year": "2011", "patent_title": None, "patent_number": "2011163640"},
+        {"author": "Fan P.", "year": "2011", "patent_title": None, "patent_number": "2011163640"},
     ),
     (
         "Redlich R. M., 2006, U. S. Patent, Patent No. [7,103,915, 7103915]",
-        {"type": "Patent", "author": "Redlich R. M.", "year": "2006", "patent_title": None, "patent_number": "7103915"},
+        {"author": "Redlich R. M.", "year": "2006", "patent_title": None, "patent_number": "7103915"},
     ),
     (
         "Watanabe K., 1995, Low calorie foodstuff, aqueous paste composition, as well as production process thereof, Patent No. 5690981A",
         {
-            "type": "Patent",
             "author": "Watanabe K.",
             "year": "1995",
             "patent_title": "Low calorie foodstuff, aqueous paste composition, as well as production process thereof",
@@ -122,16 +121,7 @@ test_patent_data = [
 
 test_parse_data = [
     ("[Anonymous], 2017, NATURE, DOI DOI 10.1038/NATURE.2017.22094", None),
-    (
-        "Dodd SK., 2013, Patent No. 2013/171639 A1",
-        {
-            "type": "Patent",
-            "author": "Dodd SK.",
-            "year": "2013",
-            "patent_title": None,
-            "patent_number": "2013/171639 A1",
-        },
-    ),
+    ("Dodd SK., 2013, Patent No. 2013/171639 A1", None),
     (
         "Wang X, 2019, BIOINFORMATICS, V35, P1745, DOI 10.1093/bioinformatics/bty869",
         {

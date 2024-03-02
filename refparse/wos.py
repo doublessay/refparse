@@ -3,10 +3,11 @@ import re
 
 
 class ParseWos:
-    def __init__(self, ref: str, keep_one_doi: bool = True, keep_eng_result: bool = True):
+    def __init__(self, ref: str, keep_one_doi: bool = True, keep_eng_result: bool = True, ignore_patent: bool = True):
         self.ref = self.clean(ref)
         self.keep_one_doi = keep_one_doi
         self.keep_eng_result = keep_eng_result
+        self.ignore_patent = ignore_patent
 
     @staticmethod
     def clean(ref: str) -> str:
@@ -22,7 +23,8 @@ class ParseWos:
         if self.ref.startswith("[Anonymous]"):
             return None
         elif "Patent No." in self.ref:
-            return self.parse_patent()
+            if not self.ignore_patent:
+                return self.parse_patent()
         elif re.search(r"\d{4}, \[", self.ref):
             return self.parse_bilingual()
         else:
@@ -166,7 +168,6 @@ class ParseWos:
             title = None
 
         return {
-            "type": "Patent",
             "author": author,
             "year": year,
             "patent_title": title,
