@@ -1,13 +1,12 @@
-from typing import Optional
 import re
+from typing import Optional
 
 
 class ParseWos:
-    def __init__(self, ref: str, keep_one_doi: bool = True, keep_eng_result: bool = True, ignore_patent: bool = True):
+    def __init__(self, ref: str, keep_one_doi: bool = True, keep_eng_result: bool = True):
         self.ref = self.clean(ref)
         self.keep_one_doi = keep_one_doi
         self.keep_eng_result = keep_eng_result
-        self.ignore_patent = ignore_patent
 
     @staticmethod
     def clean(ref: str) -> str:
@@ -23,8 +22,7 @@ class ParseWos:
         if self.ref.startswith("[Anonymous]"):
             return None
         elif "Patent No." in self.ref:
-            if not self.ignore_patent:
-                return self.parse_patent()
+            return self.parse_patent()
         elif re.search(r"\d{4}, \[", self.ref):
             return self.parse_bilingual()
         else:
@@ -113,7 +111,7 @@ class ParseWos:
         if re.search(r"\[[A-Za-z]+ ", source):
             source_eng, source_non_eng = re.split(r", (?=[^A-Za-z]+)", source.strip("[]"), maxsplit=1)
         else:
-            source_non_eng, source_eng = re.split(r"(?=[^A-Za-z]+), (?=[A-Za-z]+ )", source.strip("[]"), maxsplit=1)
+            source_non_eng, source_eng = re.split(r"(?=[^A-Za-z]+), (?=[A-Za-z]+)", source.strip("[]"), maxsplit=1)
         volume = self.extract_volume(self.ref)
         page = self.extract_page(self.ref)
         doi = self.extract_doi(self.ref)
@@ -170,6 +168,6 @@ class ParseWos:
         return {
             "author": author,
             "year": year,
-            "patent_title": title,
-            "patent_number": patent_number,
+            "title": title,
+            "identifier": patent_number,
         }
