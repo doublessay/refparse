@@ -91,15 +91,19 @@ class ParseScopus:
         return volume, issue
 
     def extract_source(self, volume: Optional[str], page: Optional[str]) -> Optional[str]:
+        # e.g. Phillips M., Knoppers B., Whose Commons? Data Protection as a Legal Limit of Open Science, Journal of Law, Medicine & Ethics, 47, pp. 106-111, (2019)
         source = self.extract(r", ([^,]*Journal of[^,]*), ")
         if not source:
-            if volume:
-                source = self.extract(f", ([^,]+), {volume}")
-            elif not source and page:
-                source = self.extract(r", ([^,]+), pp")
-            elif not source:
-                # only include a small part of conditions here
-                source = self.extract(r", ([A-Za-z\.]+), \(")
+            # e.g. Malkin R., Keane A., Evidence-based approach to the maintenance of laboratory and medical equipment in resource-poor settings, Med. Biol. Eng. Comput., 48, 7, pp. 721-726, (2010)
+            source = self.extract(r", ((?:[A-Z][A-Za-z]*\.,? ?)+), ")
+            if not source:
+                if volume:
+                    source = self.extract(f", ([^,]+), {volume}")
+                elif not source and page:
+                    source = self.extract(r", ([^,]+), pp")
+                elif not source:
+                    # only include a small part of conditions here
+                    source = self.extract(r", ([A-Za-z\.]+), \(")
         return source
 
     def extract_author(self) -> Optional[str]:
@@ -114,7 +118,7 @@ class ParseScopus:
                 return sep_loc_list[-1]
 
         pattern1 = r", Et al\., "
-        pattern2 = r"(?<=\.), "
+        pattern2 = r"(?<=[A-Z]\.), "
         pattern3 = r"^((?:[A-Z][A-Za-z\-\.]*,? ?)+)(?=, [A-Z\d])"
         if re.search(pattern1, self.ref):
             author = re.split(pattern1, self.ref, 1)[0]
@@ -161,7 +165,7 @@ class ParseScopus:
 
             elif comma_count == 1:
                 # e.g. Proposal preparation instructions., (2022)
-                if re.search("[A-Z]\., \(", self.ref):
+                if re.search(r"[A-Z]\., \(", self.ref):
                     author, year = self.ref.split(", ")
                 else:
                     title, year = self.ref.split(", ")

@@ -8,6 +8,10 @@ test_clean_data = [
         "Anglada Lluis, Abadal Ernest, Qué es la ciencia abierta?, Anuario ThinkEPI, 12, pp. 292-298, (2018)",
     ),
     (
+        "Hoffmann S., Schonbrodt F., Elsas R., Wilson R.[., Strasser U., Boulesteix A.-L., The multiplicity of analysis strategies jeopardizes replicability: Lessons learned across disciplines, Royal Society Open Science, 8, 4, (2021)",
+        "Hoffmann S., Schonbrodt F., Elsas R., Wilson R., Strasser U., Boulesteix A.-L., The multiplicity of analysis strategies jeopardizes replicability: Lessons learned across disciplines, Royal Society Open Science, 8, 4, (2021)",
+    ),
+    (
         "Scimago Journal & Country Rank,, (2022)",
         "Scimago Journal & Country Rank, (2022)",
     ),
@@ -96,7 +100,7 @@ test_author_data = [
     ("Walters, 2.2 Research designs in psychology, Pychology-1st Canadian edition, (2020)", "Walters"),
 ]
 
-test_drop_data = [
+test_parse_data = [
     (
         "(2021)",
         None,
@@ -112,6 +116,22 @@ test_drop_data = [
     (
         "Rethinking Education. Towards a Global Common Good? UNESCO. Retrieved October 28, 2015, (2015)",
         None,
+    ),
+    (
+        "Caldwell A.R., Vigotsky A.D., Tenan M.S., Radel R., Mellor D.T., Kreutzer A., Lahart I.M., Mills J.P., Boisgontier M.P., Moving sport and exercise science forward: A call for the adoption of more transparent research practices, Sports Medicine (Auckland, N.Z.), 50, 3, pp. 449-459, (2020)",
+        None,
+    ),
+    (
+        "Lazer D., Et al., Nature, 595, pp. 189-196, (2021)",
+        {
+            "author": "Lazer D.",
+            "title": None,
+            "source": "Nature",
+            "volume": "595",
+            "issue": None,
+            "page": "189-196",
+            "year": "2021",
+        },
     ),
 ]
 
@@ -201,6 +221,30 @@ test_general_data = [
         },
     ),
     (
+        "IIC, the Keck Awards, (2012)",
+        {
+            "author": None,
+            "title": "IIC, the Keck Awards",
+            "source": None,
+            "volume": None,
+            "issue": None,
+            "page": None,
+            "year": "2012",
+        },
+    ),
+    (
+        "Irreproducible biology research costs put at $28 billion per year, Nature, (2015)",
+        {
+            "author": None,
+            "title": "Irreproducible biology research costs put at $28 billion per year",
+            "source": "Nature",
+            "volume": None,
+            "issue": None,
+            "page": None,
+            "year": "2015",
+        },
+    ),
+    (
         "Bjork B.C., Growth of hybrid open access, 2009-2016, PeerJ, 5, (2017)",
         {
             "author": "Bjork B.C.",
@@ -236,6 +280,54 @@ test_general_data = [
             "year": "2015",
         },
     ),
+    (
+        "Dorch B.F., Open, transparent and honest–the way we practice research, J Nordic Perspectives on Open Science, pp. 25-30, (2015)",
+        {
+            "author": "Dorch B.F.",
+            "title": "Open, transparent and honest–the way we practice research",
+            "source": "J Nordic Perspectives on Open Science",
+            "volume": None,
+            "issue": None,
+            "page": "25-30",
+            "year": "2015",
+        },
+    ),
+    (
+        "Comer E.A., Smith C., Public involvement in the preservation and conservation of archaeology, Encyclopedia of Global Archaeology, (2020)",
+        {
+            "author": "Comer E.A., Smith C.",
+            "title": "Public involvement in the preservation and conservation of archaeology",
+            "source": "Encyclopedia of Global Archaeology",
+            "volume": None,
+            "issue": None,
+            "page": None,
+            "year": "2020",
+        },
+    ),
+    (
+        "COVID-19 or Asymptomatic SARS-CoV-2 Infection: Results of the Phase 2a Part, Antimicrob. Agents Chemother, 66, (2022)",
+        {
+            "author": None,
+            "title": "COVID-19 or Asymptomatic SARS-CoV-2 Infection: Results of the Phase 2a Part",
+            "source": "Antimicrob. Agents Chemother",
+            "volume": "66",
+            "issue": None,
+            "page": None,
+            "year": "2022",
+        },
+    ),
+    (
+        "Bruns A., Inf. Commun. Soc., 22, pp. 1544-1566, (2019)",
+        {
+            "author": "Bruns A.",
+            "title": None,
+            "source": "Inf. Commun. Soc.",
+            "volume": "22",
+            "issue": None,
+            "page": "1544-1566",
+            "year": "2019",
+        },
+    ),
 ]
 
 
@@ -264,7 +356,7 @@ def test_extract_author(input, expected):
     assert ParseScopus(input).extract_author() == expected
 
 
-@pytest.mark.parametrize("input, expected", test_drop_data)
+@pytest.mark.parametrize("input, expected", test_parse_data)
 def test_parse(input, expected):
     assert ParseScopus(input).parse() == expected
 
