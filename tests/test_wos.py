@@ -3,7 +3,10 @@ import pytest
 from refparse.wos import ParseWos
 
 test_doi_data = [
-    ("Yao J, 2008, SCIENCE, V321, P930, DOI 10.1126/science.1157566", "10.1126/science.1157566"),
+    (
+        "Yao J, 2008, SCIENCE, V321, P930, DOI 10.1126/science.1157566",
+        "10.1126/science.1157566",
+    ),
     (
         "Jiang HM, 2017, NAT CHEM BIOL, V13, P994, DOI [10.1038/NCHEMBIO.2442, 10.1038/nchembio.2442]",
         "10.1038/nchembio.2442",
@@ -15,17 +18,41 @@ test_doi_data = [
 ]
 
 test_page_data = [
-    ("Habibi M, 2017, BIOINFORMATICS, V33, pI37, DOI 10.1093/bioinformatics/btx228", "I37"),
-    ("Vaswani A., 2017, ADV NEURAL INFORM PR, P30", "30"),
+    (
+        "Habibi M, 2017, BIOINFORMATICS, V33, pI37, DOI 10.1093/bioinformatics/btx228",
+        "I37",
+    ),
+    (
+        "Vaswani A., 2017, ADV NEURAL INFORM PR, P30",
+        "30",
+    ),
 ]
 
 test_volume_data = [
-    ("Habibi M, 2017, BIOINFORMATICS, V33, pI37, DOI 10.1093/bioinformatics/btx228", "33"),
-    ("Krallinger M., 2015, J CHEMINFORM, V7", "7"),
-    ("Berg B.L., 2009, QUALITATIVE RES METH, V7th", "7th"),
-    ("Lefebvre C., 2019, COCHRANE HDB SYSTEMA, V2nd ed., P67", "2nd ed."),
-    ("Schmidt V., 1979, SEPM (Soc. Sediment. Geol.) Spec. Publ., VVolume 26, P175", "26"),
-    ("WILLIAMS RS, 1995, ANNALS OF GLACIOLOGY, VOL 21, 1995, P284", "21"),
+    (
+        "Habibi M, 2017, BIOINFORMATICS, V33, pI37, DOI 10.1093/bioinformatics/btx228",
+        "33",
+    ),
+    (
+        "Krallinger M., 2015, J CHEMINFORM, V7",
+        "7",
+    ),
+    (
+        "Berg B.L., 2009, QUALITATIVE RES METH, V7th",
+        "7th",
+    ),
+    (
+        "Lefebvre C., 2019, COCHRANE HDB SYSTEMA, V2nd ed., P67",
+        "2nd ed.",
+    ),
+    (
+        "Schmidt V., 1979, SEPM (Soc. Sediment. Geol.) Spec. Publ., VVolume 26, P175",
+        "26",
+    ),
+    (
+        "WILLIAMS RS, 1995, ANNALS OF GLACIOLOGY, VOL 21, 1995, P284",
+        "21",
+    ),
 ]
 
 test_general_data = [
@@ -90,7 +117,9 @@ test_bilingual_data = [
         },
     ),
     (
-        {"ref": "Kim Kyung Ja, 2019, [English Teaching, 영어교육], V74, P249"},
+        {
+            "ref": "Kim Kyung Ja, 2019, [English Teaching, 영어교육], V74, P249",
+        },
         {
             "author": "Kim Kyung Ja",
             "year": "2019",
@@ -101,7 +130,9 @@ test_bilingual_data = [
         },
     ),
     (
-        {"ref": "[Fang Tiegang 方铁钢], 2017, [汽车安全与节能学报, Journal of Automotive Safety and Energy], V8, P226"},
+        {
+            "ref": "[Fang Tiegang 方铁钢], 2017, [汽车安全与节能学报, Journal of Automotive Safety and Energy], V8, P226",
+        },
         {
             "author": "Fang Tiegang",
             "year": "2017",
@@ -112,7 +143,9 @@ test_bilingual_data = [
         },
     ),
     (
-        {"ref": "张海亭, 2009, [计算机系统应用, Computer Systems & Applications], V18, P1"},
+        {
+            "ref": "张海亭, 2009, [计算机系统应用, Computer Systems & Applications], V18, P1",
+        },
         {
             "author": None,
             "year": "2009",
@@ -123,19 +156,39 @@ test_bilingual_data = [
         },
     ),
     (
-        {"ref": "[赵丽晓 Zhao Lixiao], 2014, [作物杂志, Crops], P6", "keep_eng_result": False},
-        {"author": "赵丽晓", "year": "2014", "source": "作物杂志", "volume": None, "page": "6", "doi": None},
+        {
+            "ref": "[赵丽晓 Zhao Lixiao], 2014, [作物杂志, Crops], P6",
+            "keep_eng_result": False,
+        },
+        {
+            "author": "赵丽晓",
+            "year": "2014",
+            "source": "作物杂志",
+            "volume": None,
+            "page": "6",
+            "doi": None,
+        },
     ),
 ]
 
 test_patent_data = [
     (
         "Fan P., 2011, PT, Patent No. 2011163640",
-        {"author": "Fan P.", "year": "2011", "title": None, "identifier": "2011163640"},
+        {
+            "author": "Fan P.",
+            "year": "2011",
+            "title": None,
+            "identifier": "2011163640",
+        },
     ),
     (
         "Redlich R. M., 2006, U. S. Patent, Patent No. [7,103,915, 7103915]",
-        {"author": "Redlich R. M.", "year": "2006", "title": None, "identifier": "7103915"},
+        {
+            "author": "Redlich R. M.",
+            "year": "2006",
+            "title": None,
+            "identifier": "7103915",
+        },
     ),
     (
         "Watanabe K., 1995, Low calorie foodstuff, aqueous paste composition, as well as production process thereof, Patent No. 5690981A",
@@ -149,10 +202,18 @@ test_patent_data = [
 ]
 
 test_parse_data = [
-    ("[Anonymous], 2017, NATURE, DOI DOI 10.1038/NATURE.2017.22094", None),
+    (
+        "[Anonymous], 2017, NATURE, DOI DOI 10.1038/NATURE.2017.22094",
+        None,
+    ),
     (
         "Dodd SK., 2013, Patent No. 2013/171639 A1",
-        {"author": "Dodd SK.", "identifier": "2013/171639 A1", "title": None, "year": "2013"},
+        {
+            "author": "Dodd SK.",
+            "identifier": "2013/171639 A1",
+            "title": None,
+            "year": "2013",
+        },
     ),
     (
         "[张铁华 Zhang Tiehua], 2011, [吉林大学学报. 工学版, Journal of Jilin University. Engineering and Technology Edition], V41, P882",

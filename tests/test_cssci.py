@@ -3,19 +3,43 @@ import pytest
 from refparse.cssci import ParseCssci
 
 test_clean_data = [
-    ("1.康德.纯粹理性批判.北京:人民出版社", "康德.纯粹理性批判.北京:人民出版社"),
-    ("7..中华人民共和国公共图书馆法.2021", ".中华人民共和国公共图书馆法.2021"),
+    (
+        "1.康德.纯粹理性批判.北京:人民出版社",
+        "康德.纯粹理性批判.北京:人民出版社",
+    ),
+    (
+        "7..中华人民共和国公共图书馆法.2021",
+        ".中华人民共和国公共图书馆法.2021",
+    ),
 ]
 
 test_web_data = [
-    ("8.Google.Analytics.js.2021", {"type": "web", "author": "Google", "title": "Analytics.js", "year": "2021"}),
+    (
+        "8.Google.Analytics.js.2021",
+        {
+            "type": "web",
+            "author": "Google",
+            "title": "Analytics.js",
+            "year": "2021",
+        },
+    ),
     (
         "9..CNNIC:微博用户达2.5亿，近半数网民使用.2012",
-        {"type": "web", "author": None, "title": "CNNIC:微博用户达25亿，近半数网民使用2012", "year": "2012"},
+        {
+            "type": "web",
+            "author": None,
+            "title": "CNNIC:微博用户达25亿，近半数网民使用2012",
+            "year": "2012",
+        },
     ),
     (
         "22.IFLA.IFLA STRATEGY 2019-2024.2019",
-        {"type": "web", "author": "IFLA", "title": "IFLA STRATEGY 2019-2024", "year": "2019"},
+        {
+            "type": "web",
+            "author": "IFLA",
+            "title": "IFLA STRATEGY 2019-2024",
+            "year": "2019",
+        },
     ),
 ]
 
@@ -58,11 +82,21 @@ test_standard_data = [
 test_book_data = [
     (
         "14.吴建中.21世纪图书馆新论.上海:上海科学技术文献出版社",
-        {"type": "book", "author": "吴建中", "title": "21世纪图书馆新论", "source": "上海:上海科学技术文献出版社"},
+        {
+            "type": "book",
+            "author": "吴建中",
+            "title": "21世纪图书馆新论",
+            "source": "上海:上海科学技术文献出版社",
+        },
     ),
     (
         "3.金元浦.中国文化概论.北京:首都师范大学出版社",
-        {"type": "book", "author": "金元浦", "title": "中国文化概论", "source": "北京:首都师范大学出版社"},
+        {
+            "type": "book",
+            "author": "金元浦",
+            "title": "中国文化概论",
+            "source": "北京:首都师范大学出版社",
+        },
     ),
 ]
 
@@ -112,21 +146,42 @@ test_newspaper_data = [
     ),
     (
         "65..图书馆来了机器人管理员.宁波日报.1.8",
-        {"type": "newspaper", "author": None, "title": "图书馆来了机器人管理员", "source": "宁波日报", "date": "1.8"},
+        {
+            "type": "newspaper",
+            "author": None,
+            "title": "图书馆来了机器人管理员",
+            "source": "宁波日报",
+            "date": "1.8",
+        },
     ),
 ]
 
 test_patent1_data = [
-    ("26.图书上下架机器人.CN102152293A", {"type": "patent", "title": "图书上下架机器人", "identifier": "CN102152293A"})
+    (
+        "26.图书上下架机器人.CN102152293A",
+        {
+            "type": "patent",
+            "title": "图书上下架机器人",
+            "identifier": "CN102152293A",
+        },
+    )
 ]
 test_patent2_data = [
     (
         "9.一种基于RFID技术的自动式图书智能盘点机器人:201620075212.0.2016-01-25",
-        {"type": "patent", "title": "一种基于RFID技术的自动式图书智能盘点机器人", "identifier": "201620075212.0"},
+        {
+            "type": "patent",
+            "title": "一种基于RFID技术的自动式图书智能盘点机器人",
+            "identifier": "201620075212.0",
+        },
     ),
     (
         "39.一种基于区块链的金融安全存证平台系统及方法:中国，201910838935. X(2019-09-05)",
-        {"type": "patent", "title": "一种基于区块链的金融安全存证平台系统及方法", "identifier": "201910838935"},
+        {
+            "type": "patent",
+            "title": "一种基于区块链的金融安全存证平台系统及方法",
+            "identifier": "201910838935",
+        },
     ),
 ]
 
@@ -221,7 +276,12 @@ test_english_data = [
 test_parse_data = [
     (
         "3..2021第五届中国未来智慧图书馆发展论坛.2021",
-        {"type": "web", "author": None, "title": "2021第五届中国未来智慧图书馆发展论坛", "year": "2021"},
+        {
+            "type": "web",
+            "author": None,
+            "title": "2021第五届中国未来智慧图书馆发展论坛",
+            "year": "2021",
+        },
     ),
     (
         "10..GB/T 35273-2020，信息安全技术个人信息安全规范",
@@ -236,7 +296,12 @@ test_parse_data = [
     ),
     (
         "14.吴慰慈.图书馆学概论.北京:北京图书馆出版社",
-        {"type": "book", "author": "吴慰慈", "title": "图书馆学概论", "source": "北京:北京图书馆出版社"},
+        {
+            "type": "book",
+            "author": "吴慰慈",
+            "title": "图书馆学概论",
+            "source": "北京:北京图书馆出版社",
+        },
     ),
     (
         "37.潘星.智慧图书馆联盟建设策略研究:学位论文.扬州:扬州大学,2021",
@@ -260,11 +325,19 @@ test_parse_data = [
     ),
     (
         "25.一种用于图书馆机器人的书本上架装置.CN202880264U",
-        {"type": "patent", "title": "一种用于图书馆机器人的书本上架装置", "identifier": "CN202880264U"},
+        {
+            "type": "patent",
+            "title": "一种用于图书馆机器人的书本上架装置",
+            "identifier": "CN202880264U",
+        },
     ),
     (
         "10.一种基于RFID标签RSSI信号值的图书排序方法:201610050963.1.2016-01-25",
-        {"type": "patent", "title": "一种基于RFID标签RSSI信号值的图书排序方法", "identifier": "201610050963.1"},
+        {
+            "type": "patent",
+            "title": "一种基于RFID标签RSSI信号值的图书排序方法",
+            "identifier": "201610050963.1",
+        },
     ),
     (
         "33.司莉.科学数据的标准规范体系框架研究.图书馆.2016.(5)",
