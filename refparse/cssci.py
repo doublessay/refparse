@@ -12,12 +12,11 @@ class ParseCssci:
         return re.sub(r"^\d*\.", "", ref)
 
     def parse(self):
-        # web resource
+        # Web resource
         if re.search(r"\.\d{4}$", self.ref):
             return self.parse_web()
 
         if re.search(r"[\u4e00-\u9fa5]", self.ref):
-            # standard
             if "GB/" in self.ref:
                 return self.parse_standard()
 
@@ -27,15 +26,15 @@ class ParseCssci:
             elif ":学位论文." in self.ref:
                 return self.parse_thesis()
 
-            # newspaper
+            # Newspaper
             elif re.search(r"[^\d]\.\d{1,2}\.\d{1,2}", self.ref):
                 return self.parse_newspaper()
 
-            # patent 1
+            # Patent 1
             elif re.search(r"\.CN\d{9}[A-Z]$", self.ref):
                 return self.parse_patent1()
 
-            # patent 2
+            # Patent 2
             elif re.search(r"^一种", self.ref):
                 return self.parse_patent2()
 
@@ -152,7 +151,7 @@ class ParseCssci:
                     author, title = None, None
             return author, title
 
-        # english book
+        # English book
         if re.search(r":[A-Z]", self.ref):
             try:
                 ref_left, year_page = re.split(r",(?=\d{4})", self.ref, 1)
@@ -183,7 +182,7 @@ class ParseCssci:
                 "page": page,
             }
 
-        # english paper
+        # English paper
         ref_left, year_volume_issue = re.split(r"\.(?=\d{4})", self.ref, 1)
         year = year_volume_issue.split(".", 1)[0]
         issue = year_volume_issue.split("(", 1)[1].strip(")")
