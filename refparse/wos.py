@@ -22,7 +22,7 @@ class ParseWos:
         if self.ref.startswith("[Anonymous]"):
             return None
         elif "Patent No." in self.ref:
-            return self.parse_patent()
+            return None
         elif re.search(r"\d{4}, \[", self.ref):
             return self.parse_bilingual()
         else:
@@ -133,41 +133,3 @@ class ParseWos:
                 "page": page,
                 "doi": doi,
             }
-
-    def parse_patent(self) -> dict[str, Optional[str]]:
-        """Parse a patent reference from Web of Science."""
-        first_part, patent_num_part = self.ref.split(", Patent No. ")
-        if patent_num_part.startswith("["):
-            patent_number_str = patent_num_part.strip("[]")
-            patent_number_list = patent_number_str.split(", ")
-            patent_number_set = set(i.replace(",", "") for i in patent_number_list)
-            patent_number = "; ".join(patent_number_set)
-        else:
-            patent_number = patent_num_part
-
-        fields = first_part.split(", ", maxsplit=2)
-        author = fields[0]
-        year = fields[1]
-
-        try:
-            # Fan P., 2011, PT, Patent No. 2011163640
-            if fields[2] == "PT":
-                title = None
-
-            # Redlich R. M., 2006, U. S. Patent, Patent No. [7,103,915, 7103915]
-            elif fields[2].endswith("Patent"):
-                title = None
-
-            else:
-                title = fields[2]
-
-        except IndexError:
-            # Pingchen Fan PZ, 2017, Patent No. [US9745268B2, 9745268]
-            title = None
-
-        return {
-            "author": author,
-            "year": year,
-            "title": title,
-            "identifier": patent_number,
-        }

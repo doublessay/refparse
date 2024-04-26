@@ -208,12 +208,7 @@ test_parse_data = [
     ),
     (
         "Dodd SK., 2013, Patent No. 2013/171639 A1",
-        {
-            "author": "Dodd SK.",
-            "identifier": "2013/171639 A1",
-            "title": None,
-            "year": "2013",
-        },
+        None,
     ),
     (
         "[张铁华 Zhang Tiehua], 2011, [吉林大学学报. 工学版, Journal of Jilin University. Engineering and Technology Edition], V41, P882",
@@ -265,9 +260,9 @@ def test_parse_bilingual(input, expected):
     assert ParseWos(**input).parse_bilingual() == expected
 
 
-@pytest.mark.parametrize("input, expected", test_patent_data)
-def test_parse_patent(input, expected):
-    assert ParseWos(input).parse_patent() == expected
+# @pytest.mark.parametrize("input, expected", test_patent_data)
+# def test_parse_patent(input, expected):
+#     assert ParseWos(input).parse_patent() == expected
 
 
 @pytest.mark.parametrize("input, expected", test_parse_data)
