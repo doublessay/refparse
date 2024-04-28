@@ -8,57 +8,92 @@ class ParseScopus:
 
     @staticmethod
     def clean(ref: str) -> str:
-        # e.g. Anglada Lluis, Abadal Ernest, ¿Qué es la ciencia abierta?, Anuario ThinkEPI, 12, pp. 292-298, (2018)
-        if "¿" in ref:
-            ref = ref.replace("¿", "")
-
-        # e.g. Hoffmann S., Schonbrodt F., Elsas R., Wilson R.[., Strasser U., Boulesteix A.-L., The multiplicity of analysis strategies jeopardizes replicability: Lessons learned across disciplines, Royal Society Open Science, 8, 4, (2021)
-        if "[." in ref:
-            ref = re.sub(r"\[\.(?=,)", "", ref)
-
-        # remove redundant comma
-        # Scimago Journal & Country Rank,, (2022)
+        # Remove duplicate comma
+        # e.g. Scimago Journal & Country Rank,, (2022)
         ref = re.sub(r",{2,}", ",", ref)
 
-        # remove version info
-        # e.g. Robinson M., Henry M., Morris A., asapdiscovery/COVID_moonshot_submissions: Initial release for zenodo, version v0.1, Zenodo, (2023)
-        ref = re.sub(r", version [v\d\.]+(?=, )", "", ref, flags=re.I)
+        # Remove duplicate blank
+        # e.g. Huang J., Zhou M., Yang D., Extracting chatbot knowledge from online discussion forums,  International Joint Conference on artificial intelligence, (2007)
+        ref = re.sub(r" {2,}", " ", ref)
 
-        # remove No. info
+        # Remove duplicate dot
+        # e.g. Von Wangenheim C.G., et al.., Creating software process capability/maturity models, IEEE Software, 27, 4, pp. 92-94, (2010)
+        ref = re.sub(r"\.{2,}", ".", ref)
+
+        # Remove individual no. info
         # e.g. Making Open Science a Reality, OECD Science, Technology, and Industry Policy Papers, No. 25, (2015)
-        ref = re.sub(r", no\. [\d/]+(?=, )", "", ref, flags=re.I)
+        ref = re.sub(r"(?<=[^\d]), no\.? [^,]+", "", ref, flags=re.I)
 
-        # replace "Pp" with "pp"
+        # Remove individual suppl. info
+        # e.g. Webb R., Gong J.G., Rusbridge S.M., Control of ovarian function in cattle, J. Reprod. Fert., SUPPL. 45, pp. 141-156, (1992)
+        ref = re.sub(r"(?<=[^\d]), suppl\.? [^,]+", "", ref, flags=re.I)
+
+        # Replace "Pp" with "pp"
         # e.g. Trisovic A., Cluster analysis of open research data and a case for replication metadata, 2022 IEEE 18Th International Conference on E-Science (E-Science), Pp. 423–424, (2022)
         ref = re.sub(r"(?<=, )Pp(?=\.)", "pp", ref)
+
+        # Replace ", et al." with ", Et al."
+        # e.g. Von Wangenheim C.G., et al.., Creating software process capability/maturity models, IEEE Software, 27, 4, pp. 92-94, (2010)
+        ref = ref.replace(", et al.", ", Et al.")
+
+        # Remove issue symbol
+        ref = re.sub(r"\bno\.? ([^,]+)", r"\1", ref, flags=re.I)
+        ref = re.sub(r"\bsuppl\.? ([^,]+)", r"\1", ref, flags=re.I)
+
+        # Remove volume symbol
+        ref = re.sub(r"\bvol\.? ([^,]+)", r"\1", ref, flags=re.I)
+
+        # Add page symbol
+        if re.search(r", \d+-\d+, \(", ref):
+            if not re.search(r", \d{4}-\d{4}, ", ref):
+                match = re.search(r", (\d+-\d+), ", ref).group(1)
+                if re.search(r"\d, \d+-", ref):
+                    a, b = (int(i) for i in match.split("-"))
+                    # Exclude possible issue
+                    if b - a != 1:
+                        ref = ref.replace(match, f"pp. {match}", 1)
+                else:
+                    ref = ref.replace(match, f"pp. {match}", 1)
         return ref
 
-    def parse(self) -> Optional[dict[str, Optional[str]]]:
-        # only include year info
-        # e.g. (2021)
-        if self.ref.startswith("("):
+    @staticmethod
+    def drop(ref: str) -> Optional[str]:
+        # Not start with [A-Z\d]
+        if not re.search(r"^[A-Za-z\d]", ref):
             return None
 
-        # not include year info
-        # e.g. 25, pp. 279-283
-        elif not re.search(r"\d{4}\)$", self.ref):
+        # Not include year info
+        elif not re.search(r"\(\d{4}\)$", ref):
             return None
 
-        # e.g. 4, 1, (2020)
-        elif not re.search(r"[A-Za-z]", self.ref):
+        # Not include English chars
+        elif not re.search(r"[A-Za-z]", ref):
             return None
 
-        # e.g. Caldwell A.R., Vigotsky A.D., Tenan M.S., Radel R., Mellor D.T., Kreutzer A., Lahart I.M., Mills J.P., Boisgontier M.P., Moving sport and exercise science forward: A call for the adoption of more transparent research practices, Sports Medicine (Auckland, N.Z.), 50, 3, pp. 449-459, (2020)
-        elif re.search(r", (?=[^()]*\))", self.ref):
+        # Count of "(" and ")" not equal
+        elif ref.count("(") != ref.count(")"):
             return None
 
-        # e.g. Rethinking Education. Towards a Global Common Good? UNESCO. Retrieved October 28, 2015, (2015)
-        elif re.search(r"(?:^|[,\.] ?)Retrieved", self.ref):
+        # Don't parse patent
+        elif re.search(r", Patent No\.", ref):
+            return None
+
+        # Don't parse thesis
+        elif re.search(r" thesis,", ref, flags=re.I):
             return None
 
         else:
+            return ref
+
+    def parse(self) -> Optional[dict[str, Optional[str]]]:
+        if self.drop(self.ref):
             self.ref = self.clean(self.ref)
-            return self.parse_general()
+            comma_count = self.ref.count(", ")
+            # Reference info is incomplete
+            if comma_count < 3:
+                return self.parse_missing()
+            else:
+                return self.parse_general()
 
     def extract(self, pattern: str, ref: Optional[str] = None, flags=0) -> Optional[str]:
         if not ref:
@@ -71,129 +106,103 @@ class ParseScopus:
         return self.extract(pattern)
 
     def extract_page(self) -> Optional[str]:
-        pattern = r", pp\. ([A-Za-z\d-]+), "
-        return self.extract(pattern, None)
+        pattern = r", pp\. ([a-z\d–-]+), "
+        return self.extract(pattern, flags=re.I)
 
-    def extract_volume_issue(self) -> tuple[Optional[str], Optional[str]]:
-        # e.g. Scheub H., A review of African oral traditions and literature, Afr Stud Rev, 28, 2-3, pp. 1-72, (1985)
-        pattern = r", ([\d, -]+), (?=pp|\()"
-        volume_issue = self.extract(pattern)
-        if volume_issue:
-            if ", " in volume_issue:
-                volume, issue = volume_issue.split(", ")
-            else:
-                volume = volume_issue
-                issue = None
-        else:
-            # e.g. Winter G., Et al., DIALS: Implementation and evaluation of a new integration package, Acta Cryst, D74, pp. 85-97, (2018)
-            volume = self.extract(r", (D\d+), ")
-            issue = None
-        return volume, issue
+    def extract_issue(self) -> Optional[str]:
+        pattern = r" \d+, ([a-z]?[\d–-]+), (?=pp|\()"
+        return self.extract(pattern, flags=re.I)
+
+    def extract_volume(self) -> Optional[str]:
+        pattern = r", ([a-z]?\d+), (?=[a-z]?\d|pp|\()"
+        return self.extract(pattern, flags=re.I)
 
     def extract_source(self, volume: Optional[str], page: Optional[str]) -> Optional[str]:
-        # e.g. Phillips M., Knoppers B., Whose Commons? Data Protection as a Legal Limit of Open Science, Journal of Law, Medicine & Ethics, 47, pp. 106-111, (2019)
-        source = self.extract(r", ([^,]*Journal of[^,]*), ")
-        if not source:
-            # e.g. Malkin R., Keane A., Evidence-based approach to the maintenance of laboratory and medical equipment in resource-poor settings, Med. Biol. Eng. Comput., 48, 7, pp. 721-726, (2010)
-            source = self.extract(r", ((?:[A-Z][A-Za-z]*\.,? ?)+), ")
-            if not source:
-                if volume:
-                    source = self.extract(f", ([^,]+), {volume}")
-                elif not source and page:
-                    source = self.extract(r", ([^,]+), pp")
-                elif not source:
-                    # only include a small part of conditions here
-                    source = self.extract(r", ([A-Za-z\.]+), \(")
+        source = None
+
+        # Put off when encountering conference ref
+        conf_pattern = r"conference|conf\.|proceeding|proc\.|committee|convention|congress|symposium"
+        if re.search(conf_pattern, self.ref, flags=re.I):
+            pass
+
+        # Put off if source may contain comma
+        elif re.search(r", [^\(]+\)", self.ref):
+            pass
+
+        elif volume:
+            source = self.extract(f", ([A-Z][^,]+), {volume}")
+        elif not source and page:
+            source = self.extract(r", ([A-Z][^,]+), pp")
+        elif not source:
+            source = self.extract(r", ([A-Za-z\.]+), \(")
+
+        if source and source.startswith("("):
+            source = None
         return source
 
-    def extract_author(self) -> Optional[str]:
-        def find_sep_loc(sep_loc_list: list[int]) -> int:
-            """Process multiple `., ` match"""
-            folds = [round(sep_loc_list[i] / sep_loc_list[i - 1], 2) for i in range(1, len(sep_loc_list))]
-            max_fold = max(folds)
-            max_fold_loc = folds.index(max_fold)
-            if max_fold > 3 and (max_fold_loc + 1) / len(sep_loc_list) >= 0.5:
-                return sep_loc_list[max_fold_loc]
-            else:
-                return sep_loc_list[-1]
+    def extract_author(self):
+        if ", Et al." in self.ref:
+            author = re.split(r", Et al\., ", self.ref, 1)[0]
 
-        pattern1 = r", Et al\., "
-        pattern2 = r"(?<=[A-Z]\.), "
-        pattern3 = r"^((?:[A-Z][A-Za-z\-\.]*,? ?)+)(?=, [A-Z\d])"
-        if re.search(pattern1, self.ref):
-            author = re.split(pattern1, self.ref, 1)[0]
-
-        elif re.search(pattern2, self.ref):
-            sep_match = [i.end() for i in re.finditer(pattern2, self.ref)]
+        elif re.search(r"[A-Z]\., ", self.ref):
+            sep_match = [i.end() for i in re.finditer(r"[A-Z]\., ", self.ref)]
             sep_match_count = len(sep_match)
             if sep_match_count == 1:
-                author = re.split(pattern2, self.ref, 1)[0]
+                author = re.split(r"(?<=[A-Z]\.), ", self.ref, 1)[0]
             elif sep_match_count > 1:
-                sep_loc = find_sep_loc(sep_match)
+                last = sep_match[-1]
+                second_to_last = sep_match[-2]
+                third_to_last = sep_match[-3] if sep_match_count > 2 else 0
+
+                # Here the threshold is a experienced value
+                if (last - second_to_last) / (second_to_last - third_to_last) > 3:
+                    sep_loc = second_to_last
+                else:
+                    sep_loc = last
                 author = self.ref[: sep_loc - 2]
+
         else:
-            author = self.extract(pattern3)
+            author = self.extract(r"^((?:[A-Z][A-Za-z\-\.']*,? ?)+)(?=, [A-Z\d])")
+            if not author:
+                author = self.extract(r"^([A-Z][A-Za-z_-]+), ")
         return author
 
     def parse_general(self) -> dict[str, Optional[str]]:
-        comma_count = self.ref.count(", ")
-        if comma_count < 3:
-            author = None
-            title = None
-            source = None
-            page = None
-            if comma_count == 2:
-                author_sep_count = len(re.findall(r"(?<=[A-Z])\., ", self.ref))
-                # e.g. "Boyce D.E., Giddins G., (2022)"
-                if author_sep_count > 1:
-                    author, year = self.ref.rsplit(", ", 1)
+        year = self.extract_year()
+        page = self.extract_page()
+        issue = self.extract_issue()
+        volume = self.extract_volume()
+        source = self.extract_source(volume, page)
+        author = self.extract_author()
+        title = "unknown"
 
-                # e.g. Morris K., 2018/2019 Data Summary of Wet Nitrogen Deposition at Rocky Mountain National Park, (2021)
-                elif author_sep_count == 1:
-                    author, title, year = self.ref.split(", ", 2)
-
-                # e.g. "RDF Database Systems, pp. 9-40, (2015)"
-                elif re.search(r", pp", self.ref):
-                    title, page, year = self.ref.split(", ", 2)
-                    page = page[4:]
-
-                elif re.search(r", [a-z]", self.ref):
-                    # e.g. IIC, the Keck Awards, (2012)
-                    title, year = self.ref.rsplit(", ", 1)
+        # Field source may erroneous
+        if source and author:
+            # Treat last author as source
+            # e.g. Islam N., Ray B., Pasandideh F., pp. 270-276, (2020)
+            if source in author:
+                if source.count(" ") <= 1:
+                    title = None
+                    source = None
+                # e.g. Lei C., Wu Y., Sankaranarayanan A.C., Chang S.M., Guo B., Sasaki N., Kobayashi H., Sun C.W., Ozeki Y., Goda K., IEEE Photonics J., 9, (2017)
                 else:
-                    title, source, year = self.ref.split(", ", 2)
+                    title = None
+                    author = author.rsplit(", ", 1)[0]
 
-            elif comma_count == 1:
-                # e.g. Proposal preparation instructions., (2022)
-                if re.search(r"[A-Z]\., \(", self.ref):
-                    author, year = self.ref.split(", ")
+            # Treat title as source
+            elif f"Et al., {source[:20]}" in self.ref or f"{author[-5:]}, {source[:20]}" in self.ref:
+                if source.count(" ") > 3:
+                    title = source
+                    source = None
                 else:
-                    title, year = self.ref.split(", ")
-            year = year.strip("()")
-            return {
-                "author": author,
-                "title": title,
-                "source": source,
-                "volume": None,
-                "issue": None,
-                "page": page,
-                "year": year,
-            }
+                    title = None
 
-        elif comma_count >= 3:
-            year = self.extract_year()
-            page = self.extract_page()
-            volume, issue = self.extract_volume_issue()
-            source = self.extract_source(volume, page)
-            author = self.extract_author()
-
+        # Extract title info
+        if title == "unknown":
+            # Remove other fields info
             if source:
-                # e.g. Kirkham J.J., Penfold N.C., Murphy F., Boutron I., Ioannidis J.P., Polka J., Moher D., Systematic examination of preprint platforms for use in the medical and biomedical sciences setting, BMJ, (Open), 10, (2020)
-                if source.startswith("("):
-                    ref_left = re.sub(r", \(.*$", "", self.ref)
-                else:
-                    source_without_bracket = source.split("(", 1)[0]
-                    ref_left = re.sub(f", {source_without_bracket[:5]}.*$", "", self.ref)
+                repr_str = re.match(r"([A-Za-z\d\. ]{,20})", source)[1]
+                ref_left = re.sub(f", {repr_str}.*$", "", self.ref)
             elif volume:
                 ref_left = re.sub(f", {volume}.*$", "", self.ref)
             elif page:
@@ -202,23 +211,105 @@ class ParseScopus:
                 ref_left = self.ref[:-8]
 
             if author:
-                if len(author) >= len(ref_left):
-                    title = None
-                else:
-                    ref_left = ref_left.replace(author, "").replace("Et al.", "").lstrip(", ")
-                    if ", " in ref_left and not source:
-                        title, source = ref_left.split(", ", 1)
+                bare_ref_left = ref_left.replace(", Et al.", "")
+                if len(author) < len(bare_ref_left):
+                    ref_left = bare_ref_left.replace(author, "", 1).lstrip(", ")
+                    if not source:
+                        # e.g. Hansen V.L., Changing Gods in Medieval China, 1127-1276, (1990)
+                        if re.search(r", \d+\-", ref_left):
+                            title = ref_left
+
+                        elif re.search(r", [A-Z\d]", ref_left):
+                            title, source = re.split(r", (?=[A-Z\d])", ref_left, 1)
+
+                        # e.g. Amodei D., Olah C., Steinhardt J., Christiano P., Schulman J., Mane D., Concrete Problems in Ai Safety., (2016)
+                        # End with "." and less than 5 words in this piece will be seemed as source
+                        elif ref_left.endswith(".") and ref_left.count(" ") < 4:
+                            source = ref_left
+                            title = None
+                        else:
+                            title = ref_left
                     else:
                         title = ref_left
+                else:
+                    title = None
             else:
-                title = ref_left
-            title = title if title else None
+                if not source:
+                    if re.search(r", [A-Z\d]", ref_left):
+                        title, source = re.split(r", (?=[A-Z\d])", ref_left, 1)
+                    else:
+                        title = ref_left
+                else:
+                    title = ref_left
+
+        return {
+            "author": author,
+            "title": title,
+            "source": source,
+            "volume": volume,
+            "issue": issue,
+            "page": page,
+            "year": year,
+        }
+
+    def parse_missing(self) -> Optional[dict[str, Optional[str]]]:
+        author = None
+        title = None
+        source = None
+        page = None
+
+        # e.g. "Boyce D.E., Giddins G., (2022)"
+        if re.search(r"[A-Z]\., \(", self.ref):
+            author, year = self.ref.rsplit(", ", 1)
+
+        # e.g. Morris K., 2018/2019 Data Summary of Wet Nitrogen Deposition at Rocky Mountain National Park, (2021)
+        elif re.search(r"[A-Z]\.?, [A-Z\d]", self.ref):
+            author, title, year = self.ref.split(", ")
+
+        # e.g. COMEST, Preliminary study on the ethics of Artificial Intelligence, (2019)
+        elif re.search(r"^[A-Z]+, [A-Z\d]", self.ref):
+            author, title, year = self.ref.split(", ", 2)
+
+        elif re.search(r"[a-z], [A-Z\d]", self.ref):
+            parts = self.ref.split(", ")
+            # e.g. ACM Policy Council, Statement on algorithmic transparency and accountability, (2017)
+            if parts[0].count(" ") <= parts[1].count(" "):
+                author, title, year = parts
+            else:
+                # e.g. MIT Media Lab, Moral Machine, (2016)
+                if re.search(r"^[A-Z]+\b", self.ref):
+                    author, title, year = parts
+                # e.g. DroneHunter: Net Gun Drone Capture: Products, Fortem Technologies, (2021)
+                else:
+                    title, source, year = parts
+
+        elif ", pp." in self.ref:
+            # e.g. Ahn H., pp. 709-715, (2006)
+            if "., " in self.ref:
+                author, page, year = self.ref.split(", ", 2)
+            else:
+                # e.g. Consolidated Version of the Treaty on European Union, pp. 13-46, (2009)
+                title, page, year = self.ref.split(", ", 2)
+            page = page[4:]
+
+        # e.g. IIC, the Keck Awards, (2012)
+        elif re.search(r", [a-z]", self.ref):
+            title, year = self.ref.rsplit(", ", 1)
+
+        elif self.ref.count(", ") == 1:
+            title, year = self.ref.split(", ", 1)
+
+        try:
+            year = year.strip("()")
+        except UnboundLocalError:
+            return None
+        else:
             return {
                 "author": author,
                 "title": title,
                 "source": source,
-                "volume": volume,
-                "issue": issue,
+                "volume": None,
+                "issue": None,
                 "page": page,
                 "year": year,
             }
