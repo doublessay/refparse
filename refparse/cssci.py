@@ -39,7 +39,7 @@ class ParseCssci:
                 return self.parse_patent2()
 
             else:
-                return self.parse_journal()
+                return self.parse_paper()
         else:
             return self.parse_english()
 
@@ -116,7 +116,7 @@ class ParseCssci:
         identifier = re.sub(r"^[^\d]*(?=\d)", "", identifier)
         return {"type": "patent", "title": title, "identifier": identifier}
 
-    def parse_journal(self) -> dict[str, Optional[str]]:
+    def parse_paper(self) -> dict[str, Optional[str]]:
         author, title, source, year, volume_issue = self.ref.split(".", 4)
         if volume_issue.startswith("("):
             volume = None
@@ -125,7 +125,7 @@ class ParseCssci:
             volume, issue = volume_issue.split("(")
             issue = issue.strip(")")
         return {
-            "type": "journal",
+            "type": "paper",
             "author": author,
             "title": title,
             "source": source,

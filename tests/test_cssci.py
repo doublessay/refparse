@@ -186,11 +186,11 @@ test_patent2_data = [
 ]
 
 
-test_journal_data = [
+test_paper_data = [
     (
         "2.严栋.基于物联网的智慧图书馆.图书馆学刊.2010.32(7)",
         {
-            "type": "journal",
+            "type": "paper",
             "author": "严栋",
             "title": "基于物联网的智慧图书馆",
             "source": "图书馆学刊",
@@ -202,7 +202,7 @@ test_journal_data = [
     (
         "39.刘炜.5G与智慧图书馆建设.中国图书馆学报.2019.45(5)",
         {
-            "type": "journal",
+            "type": "paper",
             "author": "刘炜",
             "title": "5G与智慧图书馆建设",
             "source": "中国图书馆学报",
@@ -342,7 +342,7 @@ test_parse_data = [
     (
         "33.司莉.科学数据的标准规范体系框架研究.图书馆.2016.(5)",
         {
-            "type": "journal",
+            "type": "paper",
             "author": "司莉",
             "title": "科学数据的标准规范体系框架研究",
             "source": "图书馆",
@@ -406,9 +406,9 @@ def test_parse_patent2(input, expected):
     assert ParseCssci(input).parse_patent2() == expected
 
 
-@pytest.mark.parametrize("input, expected", test_journal_data)
-def test_parse_journal(input, expected):
-    assert ParseCssci(input).parse_journal() == expected
+@pytest.mark.parametrize("input, expected", test_paper_data)
+def test_parse_paper(input, expected):
+    assert ParseCssci(input).parse_paper() == expected
 
 
 @pytest.mark.parametrize("input, expected", test_english_data)
