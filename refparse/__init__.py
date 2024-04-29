@@ -1,4 +1,4 @@
-__version__ = "0.4.0"
+__version__ = "0.4.1"
 
 from typing import Literal, Optional
 from .wos import ParseWos

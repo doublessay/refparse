@@ -15,6 +15,10 @@ test_doi_data = [
         "Du K-K., 2013, J CHINA U POSTS TELE, V20, P96, DOI DOI 10.1016/S1005-8885(13)60240-X",
         "10.1016/s1005-8885(13)60240-x",
     ),
+    (
+        "Bahdanau D, 2016, Arxiv, DOI arXiv:1409.0473",
+        "arxiv:1409.0473",
+    ),
 ]
 
 test_page_data = [
@@ -204,6 +208,10 @@ test_patent_data = [
 test_parse_data = [
     (
         "[Anonymous], 2017, NATURE, DOI DOI 10.1038/NATURE.2017.22094",
+        None,
+    ),
+    (
+        "SILICON REPUBLIC NEW",
         None,
     ),
     (

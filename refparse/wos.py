@@ -21,6 +21,8 @@ class ParseWos:
     def parse(self):
         if self.ref.startswith("[Anonymous]"):
             return None
+        if self.ref.count(", ") == 0:
+            return None
         elif "Patent No." in self.ref:
             return None
         elif re.search(r"\d{4}, \[", self.ref):
@@ -31,6 +33,7 @@ class ParseWos:
     @staticmethod
     def extract_doi(entry: str) -> Optional[str]:
         """Extract DOI from a reference entry."""
+        doi = None
         if ", DOI [" in entry:
             doi_part = re.split(r", DOI (?=\[)", entry, maxsplit=1)[1]
             doi_list = doi_part.strip("[]").split(", ")
@@ -43,8 +46,10 @@ class ParseWos:
             doi_match = re.search(r"DOI (10\..*)$", entry)
             if doi_match:
                 doi = doi_match.group(1).lower()
-        else:
-            doi = None
+            else:
+                doi_match = re.search(r"DOI (arXiv.*)$", entry)
+                if doi_match:
+                    doi = doi_match.group(1).lower()
         return doi
 
     @staticmethod
