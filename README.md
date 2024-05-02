@@ -27,16 +27,13 @@ $ pip install refparse
 
 ## Return Fields
 
-|        | Web of Science | Scopus  | CSSCI*  |
+|        | Web of Science | Scopus  | CSSCI   |
 | :---:  | :---:          | :---:   | :---:   |
-| author | &check;        | &check; |         |
-| title  |                | &check; |         |
-| source | &check;        | &check; |         |
-| volume | &check;        | &check; |         |
-| issue  |                | &check; |         |
-| page   | &check;        | &check; |         |
-| year   | &check;        | &check; |         |
+| author | &check;        | &check; | &check; |
+| title  |                | &check; | &check; |
+| source | &check;        | &check; | &check; |
+| volume | &check;        | &check; | &check; |
+| issue  |                | &check; | &check; |
+| page   | &check;        | &check; | &check; |
+| year   | &check;        | &check; | &check; |
 | doi    | &check;        |         |         |
-| identifier except doi | |         | &check; |
-
-\* CSSCI will return differently depending on reference type.

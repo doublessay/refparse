@@ -4,202 +4,104 @@ from typing import Optional
 
 class ParseCssci:
     def __init__(self, ref: str):
-        self.ref = self.clean(ref)
-        self.dot_count = self.ref.count(".")
+        self.ref = ref
 
     @staticmethod
     def clean(ref: str) -> str:
-        return re.sub(r"^\d*\.", "", ref)
+        ref = ref.strip(".")
+        ref = re.sub(r"^\d*\.", "", ref)
+        # Remove unwanted info from newspaper ref
+        # e.g. 3.郑晋鸣.南京城东五高校建图书馆联合体.光明日报.04.24(7)
+        if re.search(r"\.\d{1,2}\.\d{1,2}(?=\(|$)", ref):
+            ref = re.split(r"\.(?=\d+\.)", ref, 1)[0]
+        return ref
 
-    def parse(self):
-        # Web resource
-        if re.search(r"\.\d{4}$", self.ref):
-            return self.parse_web()
+    @staticmethod
+    def drop(ref: str) -> Optional[str]:
+        if re.search(r"^\d+\.\d", ref):
+            return None
 
-        if re.search(r"[\u4e00-\u9fa5]", self.ref):
-            if "GB/" in self.ref:
-                return self.parse_standard()
+        elif re.search(r"^\d+\.\.$", ref):
+            return None
 
-            elif self.ref[-3:] == "出版社":
-                return self.parse_book()
+        # e.g. 2..Campbell v. Acuff-Rose Music, Inc., 510 U. S. 569 (1994),1994
+        elif re.search(r"\d{4}\),\d{4}", ref) and re.search(r"^\d+\.\.", ref):
+            return None
 
-            elif ":学位论文." in self.ref:
-                return self.parse_thesis()
+        # Drop patent
+        # e.g. 26.图书上下架机器人.CN102152293A
+        elif re.search(r"\.CN\d{9}[A-Z]$", ref):
+            return None
 
-            # Newspaper
-            elif re.search(r"[^\d]\.\d{1,2}\.\d{1,2}", self.ref):
-                return self.parse_newspaper()
-
-            # Patent 1
-            elif re.search(r"\.CN\d{9}[A-Z]$", self.ref):
-                return self.parse_patent1()
-
-            # Patent 2
-            elif re.search(r"^一种", self.ref):
-                return self.parse_patent2()
-
-            else:
-                return self.parse_paper()
+        # e.g. 9.一种基于RFID技术的自动式图书智能盘点机器人:201620075212.0.2016-01-25
+        elif re.search(r"^\d+\.一种", ref):
+            return None
         else:
-            return self.parse_english()
+            return ref
 
-    def parse_web(self) -> dict[str, Optional[str]]:
-        if self.dot_count == 2:
-            author, title, year = self.ref.split(".")
-        elif self.dot_count > 2:
+    def extract(self, pattern: str, ref: Optional[str] = None, flags=0) -> Optional[str]:
+        if not ref:
+            ref = self.ref
+        match = re.search(pattern, ref, flags)
+        return match.group(1) if match else None
+
+    def extract_author(self) -> Optional[str]:
+        if re.search(r"[A-Z]\.\.", self.ref):
+            author = self.extract(r"^(.*\.)\.")
+
+        elif re.search(r"^\.", self.ref):
+            author = None
+
+        else:
             author = self.ref.split(".", 1)[0]
-            year = self.ref.rsplit(".", 1)[1]
-            title = self.ref.replace(author + ".", "").replace("." + year, "")
-        if author == "":
-            author = None
-        return {"type": "web", "author": author, "title": title, "year": year}
+        return author
 
-    def parse_standard(self) -> dict[str, Optional[str]]:
-        if "出版社" in self.ref:
-            year = None
-            if self.dot_count == 2:
-                author, title, source = self.ref.split(".")
-            elif self.dot_count > 2:
-                author = self.ref.split(".", 1)[0]
-                source = self.ref.rsplit(".", 1)[1]
-                title = self.ref.split(".", 1)[1].replace("." + source, "")
-        else:
-            source = None
-            author = self.ref.split(".", 1)[0]
-            if re.search(r",\d{4}$", self.ref):
-                year = self.ref[-4:]
-                title = self.ref.split(".", 1)[1].replace("," + year, "")
+    def parse(self) -> Optional[dict[str, Optional[str]]]:
+        if self.drop(self.ref):
+            self.ref = self.clean(self.ref)
+            dot_count = self.ref.count(".")
+            if dot_count == 0:
+                return {
+                    "author": None,
+                    "title": self.ref,
+                    "source": None,
+                    "year": None,
+                    "volume": None,
+                    "issue": None,
+                }
+
+            volume, issue, page = None, None, None
+            year = self.extract(r"[\.,](\d{4})\b")
+            if year:
+                volume = self.extract(r"[\.,]\d{4}\.(\d+)\b")
+                issue = self.extract(r"\((\d+)\)$")
+                if not (volume and issue):
+                    # e.g. 22.邓万云.利用Internet开拓我州科技信息服务新领域,2006:204-208
+                    page = self.extract(r":([\d-]+)$")
+
+            author = self.extract_author()
+            # 1..2021年度江苏省公共图书馆大数据统计报告
+            ref_left = re.split(r"[\.,](?=\d{4}\b)", self.ref, 1)[0]
+            if author:
+                ref_left = ref_left.replace(author + ".", "", 1)
             else:
-                year = None
-                title = self.ref.split(".", 1)[1]
-
-        if author == "":
-            author = None
-        if title.startswith("GB/"):
-            identifier, title = re.split(r"[,，] ?", title, 1)
-        else:
-            title, identifier = re.split(r":(?=GB)", title, 1)
-        return {
-            "type": "standard",
-            "author": author,
-            "title": title,
-            "source": source,
-            "year": year,
-            "identifier": identifier,
-        }
-
-    def parse_book(self) -> dict[str, Optional[str]]:
-        author, title, source = self.ref.split(".")
-        return {"type": "book", "author": author, "title": title, "source": source}
-
-    def parse_thesis(self) -> dict[str, Optional[str]]:
-        author, title, other = self.ref.split(".", 2)
-        title = title[:-5]
-        source, year = other.split(",")
-        year = year if len(year) == 4 else year[:4]
-        return {"type": "thesis", "author": author, "title": title, "source": source, "year": year}
-
-    def parse_newspaper(self) -> dict[str, Optional[str]]:
-        author, title, source, date = self.ref.split(".", 3)
-        if author == "":
-            author = None
-        date = date.split("(", 1)[0]
-        return {"type": "newspaper", "author": author, "title": title, "source": source, "date": date}
-
-    def parse_patent1(self) -> dict[str, Optional[str]]:
-        title, identifier = self.ref.split(".", 1)
-        return {"type": "patent", "title": title, "identifier": identifier}
-
-    def parse_patent2(self) -> dict[str, Optional[str]]:
-        title, other = self.ref.split(":", 1)
-        identifier = other.rsplit(".", 1)[0]
-        identifier = re.sub(r"^[^\d]*(?=\d)", "", identifier)
-        return {"type": "patent", "title": title, "identifier": identifier}
-
-    def parse_paper(self) -> dict[str, Optional[str]]:
-        author, title, source, year, volume_issue = self.ref.split(".", 4)
-        if volume_issue.startswith("("):
-            volume = None
-            issue = volume_issue.strip("()")
-        else:
-            volume, issue = volume_issue.split("(")
-            issue = issue.strip(")")
-        return {
-            "type": "paper",
-            "author": author,
-            "title": title,
-            "source": source,
-            "year": year,
-            "volume": volume,
-            "issue": issue,
-        }
-
-    def parse_english(self) -> dict[str, Optional[str]]:
-        def split_author_title(ref_left: str):
-            if ".." in self.ref:
-                author, title = ref_left.split("..", 1)
-                author += "."
-
-            else:
-                dot_count = ref_left.count(".")
-                if dot_count == 1:
-                    author, title = ref_left.split(".", 1)
-
-                elif dot_count > 1:
-                    author, title = ref_left.rsplit(".", 1)
-                else:
-                    author, title = None, None
-            return author, title
-
-        # English book
-        if re.search(r":[A-Z]", self.ref):
+                ref_left = ref_left[1:]
             try:
-                ref_left, year_page = re.split(r",(?=\d{4})", self.ref, 1)
-            except ValueError:
-                ref_left = self.ref
-                year = None
-                page = None
+                title, source = ref_left.rsplit(".", 1)
+            except:
+                title = ref_left
+                source = None
             else:
-                year = year_page[:4]
-                page = year_page[5:]
-
-            if re.search(r"\.[A-Z][A-Za-z()]+:", ref_left):
-                ref_left, source = ref_left.rsplit(".", 1)
-
-            elif re.search(r"\.(?:[A-Z][A-Za-z]+ ){1,2}[A-Z][A-Za-z]+:[A-Z]", ref_left):
-                ref_left, source = ref_left.rsplit(".", 1)
-
-            else:
-                ref_left, source = ref_left.rsplit(":", 1)
-
-            author, title = split_author_title(ref_left)
+                # e.g. 4..Society 5.0——科学技术政策——内阁府.2020
+                if re.search(r"^\d", source):
+                    title = title + "." + source
+                    source = None
             return {
-                "type": "english-book",
                 "author": author,
                 "title": title,
                 "source": source,
                 "year": year,
+                "volume": volume,
+                "issue": issue,
                 "page": page,
             }
-
-        # English paper
-        ref_left, year_volume_issue = re.split(r"\.(?=\d{4})", self.ref, 1)
-        year = year_volume_issue.split(".", 1)[0]
-        issue = year_volume_issue.split("(", 1)[1].strip(")")
-        if ".(" in year_volume_issue:
-            volume = None
-        else:
-            volume = year_volume_issue.split("(", 1)[0][5:]
-
-        ref_left, source = ref_left.rsplit(".", 1)
-        author, title = split_author_title(ref_left)
-
-        return {
-            "type": "english-paper",
-            "author": author,
-            "title": title,
-            "source": source,
-            "year": year,
-            "volume": volume,
-            "issue": issue,
-        }

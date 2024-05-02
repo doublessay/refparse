@@ -46,7 +46,7 @@ class ParseScopus:
         # Add page symbol
         if re.search(r", \d+-\d+, \(", ref):
             if not re.search(r", \d{4}-\d{4}, ", ref):
-                match = re.search(r", (\d+-\d+), ", ref).group(1)
+                match = re.search(r", (\d+-\d+), ", ref).group(1) # type: ignore
                 if re.search(r"\d, \d+-", ref):
                     a, b = (int(i) for i in match.split("-"))
                     # Exclude possible issue
@@ -201,7 +201,7 @@ class ParseScopus:
         if title == "unknown":
             # Remove other fields info
             if source:
-                repr_str = re.match(r"([A-Za-z\d\. ]{,20})", source)[1]
+                repr_str = re.match(r"([A-Za-z\d\. ]{,20})", source).group(1) # type: ignore
                 ref_left = re.sub(f", {repr_str}.*$", "", self.ref)
             elif volume:
                 ref_left = re.sub(f", {volume}.*$", "", self.ref)
